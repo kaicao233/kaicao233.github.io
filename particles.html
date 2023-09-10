@@ -1,0 +1,527 @@
+<html>
+	<head>
+	<style>
+		body {
+			margin: 0;
+			overflow: hidden;
+		}
+	</style>
+	</head>
+	<body>
+		<div id="scene"></div>
+		<div class="slidecontainer">
+			<!-- Vacuum electric permittivity -->
+			<input type="range" min="0" max="8" value="4" class="slider" id="epsilon">
+			<label for="epsilon">Epsilon (Range: real_epsilon - real_epsilon/10^8)</label>
+			<!-- Initial velocity -->
+			<input type="range" min="50" max="300" value="150" class="slider" id="v0">
+			<label for="epsilon">Initial mean speed (Range: 50 - 300)</label>
+			<!-- Lifetime -->
+			<input type="range" min="1" max="20" step="1" value="10" class="slider" id="life_time">
+			<label for="epsilon">Lifetime (Range: 1 - 20)</label>
+			<!-- Max num of particles in the scene -->
+			<input type="range" min="0" max="10" value="4" class="slider" id="maxparticles">
+			<label for="epsilon">Max num of particles (Range: 10^0 - 10^10)</label>
+			<input type="checkbox" id="quad" value="yes">
+			<label for="quad">Use billboarded quads</label>
+			<input type="checkbox" id="immortal" value="yes">
+			<label for="immortal">Infinite lifetime</label>
+			<input type="checkbox" id="multi_emit" value="yes">
+			<label for="multi_emit">Multiple emitters</label>
+			<p id="num_particles"></p>
+		</div>
+		<script>
+		// stats.js to show framerates
+		// https://github.com/mrdoob/stats.js/
+		(function(){var script=document.createElement('script');script.onload=function(){var stats=new Stats();document.body.appendChild(stats.dom);requestAnimationFrame(function loop(){stats.update();requestAnimationFrame(loop)});};script.src='https://mrdoob.github.io/stats.js/build/stats.min.js';document.head.appendChild(script);})()
+
+		// The following LinkedList implementation is taken from geeksforgeeks
+		// https://www.geeksforgeeks.org/implementation-linkedlist-javascript/
+		class Node {
+			// constructor
+			constructor(element, v, life) {
+				this.element = element;
+				this.v_x = v[0];	// Added for storing speed/velocity
+				this.v_y = v[1];
+				this.v_z = v[2];
+				this.life = life;
+				this.next = null;
+			}
+		}
+		// linkedlist class
+		class LinkedList {
+			constructor() {
+				this.head = null;
+				this.size = 0;
+			}
+ 
+			// adds an element at the end
+			// of list
+			add(element, v, life) {
+				// creates a new node
+				var node = new Node(element, v, life);
+	
+				// to store current node
+				var current;
+	
+				// if list is Empty add the
+				// element and make it head
+				if (this.head == null)
+					this.head = node;
+				else {
+					current = this.head;
+	
+					// iterate to the end of the
+					// list
+					while (current.next) {
+						current = current.next;
+					}
+	
+					// add node
+					current.next = node;
+				}
+				this.size++;
+			}
+ 
+			// insert element at the position index
+			// of the list
+			insertAt(element, v, life, index) {
+				if (index < 0 || index > this.size)
+					return console.log("Please enter a valid index.");
+				else {
+					// creates a new node
+					var node = new Node(element, v, life);
+					var curr, prev;
+		
+					curr = this.head;
+		
+					// add the element to the
+					// first index
+					if (index == 0) {
+						node.next = this.head;
+						this.head = node;
+					} else {
+						curr = this.head;
+						var it = 0;
+		
+						// iterate over the list to find
+						// the position to insert
+						while (it < index) {
+							it++;
+							prev = curr;
+							curr = curr.next;
+						}
+		
+						// adding an element
+						node.next = curr;
+						prev.next = node;
+					}
+					this.size++;
+				}
+    		}
+ 
+			// removes an element from the
+			// specified location
+			removeFrom(index) {
+				if (index < 0 || index >= this.size)
+					return console.log("Please Enter a valid index");
+				else {
+					var curr, prev, it = 0;
+					curr = this.head;
+					prev = curr;
+		
+					// deleting first element
+					if (index === 0) {
+						this.head = curr.next;
+					} else {
+						// iterate over the list to the
+						// position to removce an element
+						while (it < index) {
+							it++;
+							prev = curr;
+							curr = curr.next;
+						}
+		
+						// remove the element
+						prev.next = curr.next;
+					}
+					this.size--;
+		
+					// return the remove element
+					return curr.element;
+				}
+			}
+ 
+			// removes a given element from the
+			// list
+			removeElement(element) {
+				var current = this.head;
+				var prev = null;
+		
+				// iterate over the list
+				while (current != null) {
+					// comparing element with current
+					// element if found then remove the
+					// and return true
+					if (current.element === element) {
+						if (prev == null) {
+							this.head = current.next;
+						} else {
+							prev.next = current.next;
+						}
+						this.size--;
+						return current.element;
+					}
+					prev = current;
+					current = current.next;
+				}
+				return -1;
+			}
+ 
+ 
+			// finds the index of element
+			indexOf(element) {
+				var count = 0;
+				var current = this.head;
+		
+				// iterate over the list
+				while (current != null) {
+					// compare each element of the list
+					// with given element
+					if (current.element === element)
+						return count;
+					count++;
+					current = current.next;
+				}
+		
+				// not found
+				return -1;
+			}
+		
+			// checks the list for empty
+			isEmpty() {
+				return this.size == 0;
+			}
+		
+			// gives the size of the list
+			size_of_list() {
+				console.log(this.size);
+			}
+		
+		
+			// prints the list items
+			printList() {
+				var curr = this.head;
+				var str = "";
+				while (curr) {
+					str += curr.element + " ";
+					curr = curr.next;
+				}
+				console.log(str);
+			}
+ 
+		}
+		</script>
+
+		<script type = "module">
+		// The following two imports are inherited from second year coursework skeleton code
+		import * as THREE from
+		"https://web.cs.manchester.ac.uk/three/three.js-master/build/three.module.js";
+		import { OrbitControls } from
+		"https://web.cs.manchester.ac.uk/three/three.js-master/examples/jsm/controls/OrbitControls.js";
+
+		// Your Javascript will go here.
+		var camera, scene, renderer, controls;
+		
+		var x0, y0, z0;
+		var v0 = 150;  // Default velocity
+		var drawCounter;
+		var clock, particle_clock;
+		var life_time = 10;
+		var immortality = 0;    // If this turned to 1, life_time calculation is ignored
+		var multiple_emitters = 0;
+		
+		var NUM_Particles;		// Number of particles in the scene
+		var MAXPARTICLES = 10000;
+		
+		var Particles = new LinkedList();
+		var ParticleGeometry, ParticleMaterial, ParticleGeometry2, ParticleMaterial2, ParticleColour;
+		var geometry_choice = 0;
+
+		var Nucleus, NucleusGeometry, NucleusMaterial, NucleusColour;
+
+		const real_epsilon = 8.85e-12;
+		var epsilon = real_epsilon / 10000;
+		const unit_q = 1.60e-19;
+		var q_nucleus = 79 * unit_q;
+		var q_particle = 2 * unit_q;
+		const unit_mass = 1.66e-27;
+		var m_particle = 4 * unit_mass;
+
+		var slider = document.getElementById("epsilon");
+		slider.oninput = function() {
+			epsilon = real_epsilon / (Math.pow(10, Number(this.value)));
+		}
+		slider = document.getElementById("v0");
+		slider.oninput = function() {
+			v0 = Number(this.value);
+		}
+		slider = document.getElementById("life_time");
+		slider.oninput = function() {
+			life_time = Number(this.value);
+		}
+		slider = document.getElementById("maxparticles");
+		slider.oninput = function() {
+			MAXPARTICLES = Math.pow(10, Number(this.value));
+		}
+		var checkbox = document.getElementById("quad");
+		checkbox.oninput = function() {
+			if (this.checked) {
+				geometry_choice = 1;
+			}
+			else {
+				geometry_choice = 0;
+			}
+		}
+		checkbox = document.getElementById("immortal");
+		checkbox.oninput = function() {
+			if (this.checked) {
+				immortality = 1;
+			}
+			else {
+				immortality = 0;
+			}
+		}
+		checkbox = document.getElementById("multi_emit");
+		checkbox.oninput = function() {
+			if (this.checked) {
+				multiple_emitters = 1;
+			}
+			else {
+				multiple_emitters = 0;
+			}
+		}
+		
+		init();
+		animate();
+
+		// Initialise scene, camera and renderer
+		function init() {
+			scene = new THREE.Scene();
+			
+			camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 10000);
+			camera.position.set(0, 0, 200);
+			
+			renderer = new THREE.WebGLRenderer();
+			renderer.setSize(window.innerWidth, window.innerHeight - 80);
+			document.getElementById("scene").appendChild(renderer.domElement);
+			
+			controls = new OrbitControls(camera, renderer.domElement);
+			controls.autoRotate = false;
+			
+			// Center of the emitter
+			x0 = -200;
+			y0 = 0;
+			z0 = 0;
+			
+			NUM_Particles = 0;
+			drawCounter = 0;
+
+			ParticleColour = 0xFF0000;
+			// Sphere geometery
+			ParticleGeometry = new THREE.SphereGeometry(1, 8, 8);
+			ParticleMaterial = new THREE.MeshBasicMaterial( { color: ParticleColour } );
+			// Billboarded quad geometry
+			// Texture image taken from wikipedia: https://en.wikipedia.org/wiki/Helium
+			const texture = new THREE.TextureLoader().load( "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1f/HeTube.jpg/480px-HeTube.jpg" );
+			texture.wrapS = THREE.RepeatWrapping;
+			texture.wrapT = THREE.RepeatWrapping;
+			texture.repeat.set( 1, 1 );
+			ParticleGeometry2 = new THREE.PlaneGeometry( 2, 2 );
+			ParticleMaterial2 = new THREE.MeshBasicMaterial( {map: texture, side: THREE.FrontSide} );
+
+			NucleusColour = 0x0000FF;
+			NucleusGeometry = new THREE.SphereGeometry(5, 8, 8);
+			NucleusMaterial = new THREE.MeshBasicMaterial({color: NucleusColour});
+			Nucleus = new THREE.Mesh(NucleusGeometry, NucleusMaterial);
+			Nucleus.position.set(200, 0, 0);
+			scene.add(Nucleus);
+
+			const axesHelper = new THREE.AxesHelper( 100 );
+			scene.add(axesHelper);
+
+			clock = new THREE.Clock();
+			
+		}
+		
+		function drawNewPoint() {
+			// Characteristics of the emitter
+			var radius = 20;
+			var x = x0;
+			var y = y0 + (Math.random() * radius * 2 - radius);
+			var z = z0 + (Math.random() * radius * 2 - radius);
+
+			var v_variance = 50;
+			var v_x = v0 + (Math.random() * v_variance * 2 - v_variance);
+			var v = [v_x, 0, 0];
+			
+			var Particle;
+			if (geometry_choice == 0) {
+				Particle = new THREE.Mesh(ParticleGeometry, ParticleMaterial);    // Sphere
+			}
+			else {
+				Particle = new THREE.Mesh(ParticleGeometry2, ParticleMaterial2);  // Billboarded quad
+			}
+			Particle.position.x = x;
+			Particle.position.y = y;
+			Particle.position.z = z;
+						
+			scene.add(Particle);
+			Particles.add(Particle, v, life_time);
+			NUM_Particles += 1;
+		}
+		
+		function drawNewPoint2() {
+			// Characteristics of the emitter
+			var radius = 20;
+			var x = -200;
+			var y = 100 + (Math.random() * radius * 2 - radius);
+			var z = 0 + (Math.random() * radius * 2 - radius);
+
+			var v_variance = 50;
+			var v_mag = v0 + (Math.random() * v_variance * 2 - v_variance);
+			var nucleus_loc = new THREE.Vector3( Nucleus.position.x, Nucleus.position.y, Nucleus.position.z );
+			var emitter_loc = new THREE.Vector3( -200, 100, 0 );
+			var v_unit = nucleus_loc.sub(emitter_loc).normalize();
+			var v = v_unit.multiplyScalar(v_mag);
+			
+			var Particle;
+			if (geometry_choice == 0) {
+				Particle = new THREE.Mesh(ParticleGeometry, ParticleMaterial);    // Sphere
+			}
+			else {
+				Particle = new THREE.Mesh(ParticleGeometry2, ParticleMaterial2);  // Billboarded quad
+			}
+			Particle.position.x = x;
+			Particle.position.y = y;
+			Particle.position.z = z;
+						
+			scene.add(Particle);
+			Particles.add(Particle, [v.x, v.y, v.z], life_time);
+			NUM_Particles += 1;
+		}
+
+		function drawNewPoint3() {
+			// Characteristics of the emitter
+			var radius = 20;
+			var x = -200;
+			var y = -100 + (Math.random() * radius * 2 - radius);
+			var z = 0 + (Math.random() * radius * 2 - radius);
+
+			var v_variance = 50;
+			var v_mag = v0 + (Math.random() * v_variance * 2 - v_variance);
+			var nucleus_loc = new THREE.Vector3( Nucleus.position.x, Nucleus.position.y, Nucleus.position.z );
+			var emitter_loc = new THREE.Vector3( -200, -100, 0 );
+			var v_unit = nucleus_loc.sub(emitter_loc).normalize();
+			var v = v_unit.multiplyScalar(v_mag);
+			
+			var Particle;
+			if (geometry_choice == 0) {
+				Particle = new THREE.Mesh(ParticleGeometry, ParticleMaterial);    // Sphere
+			}
+			else {
+				Particle = new THREE.Mesh(ParticleGeometry2, ParticleMaterial2);  // Billboarded quad
+			}
+			Particle.position.x = x;
+			Particle.position.y = y;
+			Particle.position.z = z;
+			
+			scene.add(Particle);
+			Particles.add(Particle, [v.x, v.y, v.z], life_time);
+			NUM_Particles += 1;
+		}
+
+		function animate() {
+			requestAnimationFrame(animate);
+			drawCounter += 1;
+			if (NUM_Particles < MAXPARTICLES) {
+				drawNewPoint();
+			}
+			if (multiple_emitters == 1) {
+				if (NUM_Particles < MAXPARTICLES) {
+					drawNewPoint2();
+				}
+				if (NUM_Particles < MAXPARTICLES) {
+					drawNewPoint3();
+				}
+			}
+			// var test_clock = new THREE.Clock();
+			// test_clock.start();
+			updatePoint();
+			// console.log("Time for physics:", test_clock.getDelta());
+			renderer.render(scene, camera);
+			// console.log("Time for rendering:", test_clock.getDelta());
+			document.getElementById("num_particles").innerHTML = "Num of particles in screen: " + NUM_Particles;
+			// console.log(NUM_Particles);
+		}
+		
+		function updatePoint() {
+			var curr = Particles.head;
+        	var Particle, v_x, v_y, v_z;
+			var delta = clock.getDelta();
+        	while (curr) {
+            	Particle = curr.element;
+
+				// Physics!
+				var nucleus_loc = new THREE.Vector3( Nucleus.position.x, Nucleus.position.y, Nucleus.position.z );
+				var particle_loc = new THREE.Vector3( Particle.position.x, Particle.position.y, Particle.position.z );
+				var n_to_p = particle_loc.sub(nucleus_loc);
+				var r = n_to_p.length();
+				var force_unit = n_to_p.normalize();
+				var force_mag = q_nucleus * q_particle / (4*Math.PI*epsilon*r*r);
+				var force = force_unit.multiplyScalar(force_mag);
+
+				// Acceleration!
+				var a_x = force.x / m_particle;
+				var a_y = force.y / m_particle;
+				var a_z = force.z / m_particle;
+
+				// Velocity!
+				curr.v_x += a_x * delta;
+				curr.v_y += a_y * delta;
+				curr.v_z += a_z * delta;
+
+				// console.log(curr.v_x, curr.v_y, curr.v_z);
+
+				// Move!
+				Particle.position.x += curr.v_x * delta;
+				Particle.position.y += curr.v_y * delta;
+				Particle.position.z += curr.v_z * delta;
+				// console.log(Particle.position);
+
+				if (geometry_choice == 1) {
+					Particle.lookAt(camera.position);
+				}
+				
+				// Check if moving out of scene
+				if (Particle.position.x<-250 || Particle.position.x>250 || Particle.position.y<-250 || Particle.position.y>250 || Particle.position.z<-250 || Particle.position.z>250) {
+					Particles.removeElement(Particle);
+					scene.remove(Particle);
+					NUM_Particles -= 1;
+				}
+				
+				// Check if life_time reached;
+				curr.life -= delta;
+				// console.log(curr.life);
+				if (!immortality && curr.life <= 0) {
+					Particles.removeElement(Particle);
+					scene.remove(Particle);
+					NUM_Particles -= 1;
+				}
+				
+				curr = curr.next;
+			}
+		}
+		</script>
+	</body>
+</html>
